@@ -12,27 +12,30 @@ import (
 
 func makeGetRequest(url string) (*http.Response, error) {
 	client := &http.Client{}
-	req, _ := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
 
 	// Since we can't do request if we don't have a user agent, we have to set one
-	req.Header.Set("User-Agent", "Mozilla/5.0")
+	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
 
 	response, err := client.Do(req)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
-	fmt.Println("Status:", response.Status)
 	if response.StatusCode != http.StatusOK {
-		log.Fatalf("Bad status: %s", response.Status)
+		response.Body.Close()
+		return nil, fmt.Errorf("bad status: %d (%s)", response.StatusCode, response.Status)
 	}
 
 	return response, nil
 }
 
-func ExtractLinks(doc *html.Node) ([]string, []string) {
+// Returns a []string of the link of the images found in a given Node of html
+func ExtractLinks(doc *html.Node, depth int, recursive bool, current_depth int) []string {
 	var images []string
-	var sublinks []string
 
 	var traverse func(*html.Node)
 	traverse = func(n *html.Node) {
@@ -47,7 +50,14 @@ func ExtractLinks(doc *html.Node) ([]string, []string) {
 		if n.Type == html.ElementNode && n.Data == "a" {
 			for _, attr := range n.Attr {
 				if attr.Key == "href" {
-					sublinks = append(sublinks, attr.Val)
+					fmt.Printf("[LOG] Trying link %s with a depth of %d\n", attr.Val, current_depth)
+					if recursive && current_depth < depth {
+						doc, _ := GetHtmlFromUrl(attr.Val)
+						if doc != nil {
+							new_images := ExtractLinks(doc, depth, recursive, current_depth+1)
+							images = append(images, new_images...)
+						}
+					}
 				}
 			}
 		}
@@ -56,24 +66,29 @@ func ExtractLinks(doc *html.Node) ([]string, []string) {
 		}
 	}
 	traverse(doc)
-	fmt.Println("images", images)
-	fmt.Println("sublinks", sublinks)
-	return images, sublinks
+	fmt.Println("", images)
+	return images
 }
 
-func GetHtmlFromUrl(url string) *html.Node {
-	response, _ := makeGetRequest(url)
+func GetHtmlFromUrl(url string) (*html.Node, error) {
+	response, err := makeGetRequest(url)
+	if err != nil {
+		return nil, err
+	}
 	defer response.Body.Close()
 
 	doc, err := html.Parse(response.Body)
 	if err != nil {
 		log.Fatal(err)
 	}
-	return doc
+	return doc, nil
 }
 
 func DownloadImageFromUrl(url string, filename string) {
-	response, _ := makeGetRequest(url)
+	response, err := makeGetRequest(url)
+	if err != nil {
+		log.Fatal(err)
+	}
 	defer response.Body.Close()
 
 	// open a file for writing

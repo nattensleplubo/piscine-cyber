@@ -13,9 +13,10 @@ func printOptions(url string, recursive bool, depth int, folder_path string) {
 }
 
 func main() {
-	recursive := flag.Bool("r", false, "recursively download images")
-	depth := flag.Int("l", 5, "max depth for recursive download")
+	recursive := flag.Bool("r", true, "recursively download images")
+	depth := flag.Int("l", 2, "max depth for recursive download")
 	path := flag.String("p", "./data/", "path to save downloaded files")
+	current_depth := 0
 
 	flag.Parse()
 
@@ -28,6 +29,7 @@ func main() {
 
 	printOptions(url, *recursive, *depth, *path)
 	// downloader.DownloadImageFromUrl(url, "testing.jpg")
-	doc := downloader.GetHtmlFromUrl("https://www.42.fr")
-	downloader.ExtractLinks(doc)
+	doc, _ := downloader.GetHtmlFromUrl("https://www.42.fr")
+	image_links := downloader.ExtractLinks(doc, *depth, *recursive, current_depth)
+	fmt.Println("\n\n[ALL LINKS] : \n", image_links)
 }
