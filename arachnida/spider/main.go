@@ -33,3 +33,5 @@ func main() {
 	image_links := downloader.ExtractLinks(doc, *depth, *recursive, current_depth)
 	fmt.Println("\n\n[ALL LINKS] : \n", image_links)
 }
+
+//go run main.go https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/Assemblage_chien.jpg/330px-Assemblage_chien.jpg
