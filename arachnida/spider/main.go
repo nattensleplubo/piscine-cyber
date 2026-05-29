@@ -21,6 +21,7 @@ func main() {
 	path := flag.String("p", "./data", "path to save downloaded files")
 	current_depth := 0
 	spinr := spinner.New(spinner.CharSets[11], 100*time.Millisecond)
+	visited := make(map[string]bool)
 
 	flag.Parse()
 
@@ -51,12 +52,11 @@ func main() {
 	spinr.Suffix = " crawling\n"
 	spinr.Color("red", "bold")
 	spinr.Start()
-	image_links := downloader.ExtractLinks(doc, *depth, *recursive, current_depth)
+	image_links := downloader.ExtractLinks(doc, *depth, *recursive, current_depth, visited)
 	spinr.Stop()
-	fmt.Printf("Done\n")
+	fmt.Printf("done...\n")
 	for _, img := range image_links {
 		filename, err := downloader.GetFilenameFromUrl(img)
-		fmt.Println("filename: ", filename)
 		if err == nil && downloader.CheckFileExtension(filename) != false {
 			namepath := *path + filename
 			downloader.DownloadImageFromUrl(img, namepath)
