@@ -2,6 +2,7 @@ package downloader
 
 import (
 	"fmt"
+	"path/filepath"
 	"strings"
 	"time"
 )
@@ -61,4 +62,12 @@ func (s *Spinner) Stop() {
 	close(s.stopChan)
 	// Brief pause to allow the terminal cursor to reset cleanly
 	time.Sleep(50 * time.Millisecond)
+}
+
+func CheckFileExtension(filename string) bool {
+	ext := filepath.Ext(filename)
+	if ext == ".jpeg" || ext == ".jpg" || ext == ".png" || ext == ".gif" || ext == ".bmp" {
+		return true
+	}
+	return false
 }

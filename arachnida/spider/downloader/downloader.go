@@ -5,7 +5,9 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
+	"path"
 
 	"golang.org/x/net/html"
 )
@@ -101,8 +103,10 @@ func GetHtmlFromUrl(url string) (*html.Node, error) {
 }
 
 func DownloadImageFromUrl(url string, filename string) {
+	fmt.Println("downloading ", url)
 	response, err := makeGetRequest(url)
 	if err != nil {
+		return
 		log.Fatal(err)
 	}
 	defer response.Body.Close()
@@ -110,6 +114,7 @@ func DownloadImageFromUrl(url string, filename string) {
 	// open a file for writing
 	file, err := os.Create(filename)
 	if err != nil {
+		return
 		log.Fatal(err)
 	}
 	defer file.Close()
@@ -118,6 +123,19 @@ func DownloadImageFromUrl(url string, filename string) {
 	// This supports huge files
 	_, e := io.Copy(file, response.Body)
 	if e != nil {
+		return
 		log.Fatal(err)
 	}
+}
+
+func GetFilenameFromUrl(image_url string) (string, error) {
+	parsed_url, err := url.Parse(image_url)
+	if err != nil {
+		return "", err
+	}
+	filename := path.Base(parsed_url.Path)
+	if filename == "." || filename == "/" || filename == "" {
+		return "", err
+	}
+	return filename, nil
 }
