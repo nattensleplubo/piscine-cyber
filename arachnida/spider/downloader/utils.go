@@ -2,11 +2,28 @@ package downloader
 
 import (
 	"fmt"
+	"strings"
 	"time"
 )
 
 type Spinner struct {
 	stopChan chan struct{}
+}
+
+func isHTMLPage(url_str string) bool {
+	lower_url := strings.ToLower(url_str)
+
+	forbidden_extensions := []string{
+		".pdf", ".zip", ".tar", ".gz", ".mp3", ".mp4",
+		".png", ".jpg", ".jpeg", ".gif", ".svg", ".doc", ".docx",
+	}
+
+	for _, ext := range forbidden_extensions {
+		if strings.HasSuffix(lower_url, ext) {
+			return false
+		}
+	}
+	return true
 }
 
 // StartSpinner runs a spinning animation in a background goroutine
@@ -21,13 +38,13 @@ func StartSpinner(message string) *Spinner {
 	go func() {
 		ticker := time.NewTicker(100 * time.Millisecond)
 		defer ticker.Stop()
-		
+
 		i := 0
 		for {
 			select {
 			case <-s.stopChan:
 				// Clear the line when stopping
-				fmt.Print("\r\033[K") 
+				fmt.Print("\r\033[K")
 				return
 			case <-ticker.C:
 				// \r moves cursor to start, \033[K clears the line text ahead
@@ -43,5 +60,5 @@ func StartSpinner(message string) *Spinner {
 func (s *Spinner) Stop() {
 	close(s.stopChan)
 	// Brief pause to allow the terminal cursor to reset cleanly
-	time.Sleep(50 * time.Millisecond) 
+	time.Sleep(50 * time.Millisecond)
 }

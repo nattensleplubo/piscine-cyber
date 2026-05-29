@@ -50,12 +50,14 @@ func ExtractLinks(doc *html.Node, depth int, recursive bool, current_depth int) 
 		if n.Type == html.ElementNode && n.Data == "a" {
 			for _, attr := range n.Attr {
 				if attr.Key == "href" {
-					fmt.Printf("[LOG] Trying link %s with a depth of %d\n", attr.Val, current_depth)
+					// fmt.Printf("[LOG] Trying link %s with a depth of %d\n", attr.Val, current_depth)
 					if recursive && current_depth < depth {
-						doc, _ := GetHtmlFromUrl(attr.Val)
-						if doc != nil {
-							new_images := ExtractLinks(doc, depth, recursive, current_depth+1)
-							images = append(images, new_images...)
+						if isHTMLPage(attr.Val) {
+							doc, _ := GetHtmlFromUrl(attr.Val)
+							if doc != nil {
+								new_images := ExtractLinks(doc, depth, recursive, current_depth+1)
+								images = append(images, new_images...)
+							}
 						}
 					}
 				}
@@ -66,8 +68,22 @@ func ExtractLinks(doc *html.Node, depth int, recursive bool, current_depth int) 
 		}
 	}
 	traverse(doc)
-	fmt.Println("", images)
+	// fmt.Println("", images)
+	images = clearDoubles(images)
 	return images
+}
+
+func clearDoubles(images []string) []string {
+	encountered := map[string]bool{}
+	result := []string{}
+
+	for _, v := range images {
+		if !encountered[v] {
+			encountered[v] = true
+			result = append(result, v)
+		}
+	}
+	return result
 }
 
 func GetHtmlFromUrl(url string) (*html.Node, error) {
@@ -100,9 +116,8 @@ func DownloadImageFromUrl(url string, filename string) {
 
 	// Use io.Copy to just dump the response body to the file.
 	// This supports huge files
-	written, err := io.Copy(file, response.Body)
-	if err != nil {
+	_, e := io.Copy(file, response.Body)
+	if e != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("Success with file size of ", written)
 }
