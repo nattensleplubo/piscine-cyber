@@ -3,8 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/briandowns/spinner"
 	"os"
+
+	"github.com/briandowns/spinner"
+
 	// "path/filepath"
 	"spider/downloader"
 	"time"
@@ -21,7 +23,6 @@ func main() {
 	path := flag.String("p", "./data", "path to save downloaded files")
 	current_depth := 0
 	spinr := spinner.New(spinner.CharSets[11], 100*time.Millisecond)
-	visited := make(map[string]bool)
 
 	flag.Parse()
 
@@ -52,7 +53,7 @@ func main() {
 	spinr.Suffix = " crawling\n"
 	spinr.Color("red", "bold")
 	spinr.Start()
-	image_links := downloader.ExtractLinks(doc, *depth, *recursive, current_depth, visited)
+	image_links := downloader.ExtractLinks(doc, *depth, *recursive, current_depth)
 	spinr.Stop()
 	fmt.Printf("done...\n")
 	for _, img := range image_links {

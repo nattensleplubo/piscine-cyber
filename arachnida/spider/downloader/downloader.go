@@ -36,7 +36,7 @@ func makeGetRequest(url string) (*http.Response, error) {
 }
 
 // Returns a []string of the link of the images found in a given Node of html
-func ExtractLinks(doc *html.Node, depth int, recursive bool, current_depth int, visited map[string]bool) []string {
+func ExtractLinks(doc *html.Node, depth int, recursive bool, current_depth int) []string {
 	var images []string
 
 	var traverse func(*html.Node)
@@ -52,16 +52,11 @@ func ExtractLinks(doc *html.Node, depth int, recursive bool, current_depth int, 
 		if n.Type == html.ElementNode && n.Data == "a" {
 			for _, attr := range n.Attr {
 				if attr.Key == "href" {
-					link := attr.Val
 					if recursive && current_depth < depth {
-						if visited[link] {
-							continue
-						}
 						if isHTMLPage(attr.Val) {
-							visited[link] = true
 							doc, _ := GetHtmlFromUrl(attr.Val)
 							if doc != nil {
-								new_images := ExtractLinks(doc, depth, recursive, current_depth+1, visited)
+								new_images := ExtractLinks(doc, depth, recursive, current_depth+1)
 								images = append(images, new_images...)
 							}
 						}
