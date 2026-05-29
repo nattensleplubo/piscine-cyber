@@ -30,7 +30,11 @@ func main() {
 	printOptions(url, *recursive, *depth, *path)
 	// downloader.DownloadImageFromUrl(url, "testing.jpg")
 	doc, _ := downloader.GetHtmlFromUrl("https://www.42.fr")
+	spinner := downloader.StartSpinner("Scraping websites and downloading assets...")
+	defer spinner.Stop()
 	image_links := downloader.ExtractLinks(doc, *depth, *recursive, current_depth)
+	spinner.Stop()
+	fmt.Printf("Done\n")
 	fmt.Println("\n\n[ALL LINKS] : \n", image_links)
 }
 
