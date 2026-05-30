@@ -8,47 +8,50 @@ import (
 	"scorpion/exif"
 )
 
-/*
-
-Scorpion:
-	The program receive image files and parse them for EXIF and other metadatas,
-displaying them on the screen.
-
-	Should be compatible with the files extensions that spider handles :
-		[ ] jpg
-		[ ] jpeg
-		[ ] png
-		[ ] gif
-		[ ] bmp
-
-*/
-
 func main() {
 	if len(os.Args) < 2 {
-		fmt.Println("Usage: ./scorpion <file>")
+		fmt.Println("Usage: ./scorpion <file1> <file2> ...")
 		return
 	}
 
 	for i := 1; i < len(os.Args); i++ {
-		file, err := os.Open(os.Args[i])
+		filename := os.Args[i]
+		file, err := os.Open(filename)
 		if err != nil {
-			fmt.Println("error opening file ", err)
+			fmt.Printf("Error opening file %s: %v\n", filename, err)
+			continue
 		}
-		defer file.Close()
 
-		file_extension := filepath.Ext(os.Args[i])
-		switch file_extension {
-		case ".jpg":
-			is_valid_jpeg, marker := checker.CheckIfValidJpeg(file)
-			if is_valid_jpeg {
-				exif.GetJpegEXIF(file, marker, os.Args[i])
+		ext := filepath.Ext(filename)
+		switch ext {
+		case ".jpg", ".jpeg":
+			isValid, marker := checker.CheckIfValidJpeg(file)
+			if isValid {
+				exif.GetJpegEXIF(file, marker, filename)
+			} else {
+				fmt.Printf("%s is not a valid JPEG\n", filename)
 			}
 		case ".png":
-			fmt.Println("CHECKING PNG")
+			if checker.CheckIfValidPng(file) {
+				exif.GetPngMetadata(file, filename)
+			} else {
+				fmt.Printf("%s is not a valid PNG\n", filename)
+			}
 		case ".gif":
-			fmt.Println("CHECKING GIF")
+			if checker.CheckIfValidGif(file) {
+				exif.GetGifMetadata(file, filename)
+			} else {
+				fmt.Printf("%s is not a valid GIF\n", filename)
+			}
 		case ".bmp":
-			fmt.Println("CHECKING BMP")
+			if checker.CheckIfValidBmp(file) {
+				exif.GetBmpMetadata(file, filename)
+			} else {
+				fmt.Printf("%s is not a valid BMP\n", filename)
+			}
+		default:
+			fmt.Printf("Unsupported file extension: %s\n", ext)
 		}
+		file.Close()
 	}
 }
